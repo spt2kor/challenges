@@ -1,0 +1,205 @@
+#include <map>
+#include <set>
+#include <list>
+#include <cmath>
+#include <ctime>
+#include <deque>
+#include <queue>
+#include <stack>
+#include <string>
+#include <bitset>
+#include <cstdio>
+#include <limits>
+#include <vector>
+#include <climits>
+#include <cstring>
+#include <cstdlib>
+#include <fstream>
+#include <numeric>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+    /*
+     * Complete the function below.
+    */
+    
+    struct trans
+{
+    int ss;
+    int es;
+    int ti;
+    int ln;
+};
+
+set<int> g_stations;
+struct aroute
+{
+    int ti;
+    int ln;
+    aroute(int ti=-1,int ln=-1):ti(ti),ln(ln){}
+};
+aroute** cmap = NULL;
+
+typedef map<int , map<int,trans>> LineT;
+map<int , LineT> g_Lines;
+
+void conStrToLineT(string& str , LineT& aline, int& lno);
+void fillMap();
+//========================================================================================
+vector < string > quickestMetroRoute(vector < string > input1,string input2)
+{
+    //cout<<"\n input1 "<<input2<<endl;
+    vector<string> froute;
+    if( input1.empty() || input2.empty())
+        return  froute;
+    //convert one route to lineT information
+    for(int i=0;i< input1.size() ; ++i)
+    {
+        LineT &aline = g_Lines[i];
+
+        conStrToLineT(input1[i] , aline , i);
+        //cout<<"\n line no : "<<i <<"\t total ss: "<<aline.size()<<endl;
+        //cout<<"\n line no : "<<i <<"\t total station: "<<g_stations.size()<<endl;
+    }
+    //========================================================================================
+    //convert to a common route
+
+	fillMap();
+	
+	//========================================================================================
+	cout<<"\n froute = "<<froute.size();
+	return froute;
+}
+//========================================================================================
+/*
+typedef map<int , map<int,trans>> LineT;
+map<int , LineT> g_Lines;
+aroute** map = NULL;
+*/
+void fillMap()
+{
+    cmap = new aroute* [g_stations.size()+1] ;
+    for(int i = 0 ; i< g_stations.size()+1 ; ++i)
+        cmap[i] = new aroute [g_stations.size()+1];
+        
+    for(int i= 0; i<g_stations.size()+1 ; ++i )
+        for(int j= 0; j<g_stations.size()+1 ; ++j )
+            cmap[i][j] = aroute(-1,-1);
+            
+    int ss =0 , es = 0;
+    int start =-1;
+    for(auto itr2= g_Lines.begin(); itr2 != g_Lines.end() ; ++itr2) 
+    {
+
+        LineT& line = itr2->second;
+        
+        int added=0;
+        for(auto itr= line.begin(); itr != line.end() ; ++itr) 
+        {
+            map<int,trans> &rou = itr->second;
+            auto itr1  = rou.begin();
+            es = itr1->first; 
+            
+            aroute route;
+            route.ti = itr1->second.ti;
+            route.ln = itr1->second.ln;
+            if(cmap[ss][es].ti == -1)
+            {
+                cmap[ss][es] = route;
+                cmap[es][ss] = route;
+                added = added+2;
+            }
+            else
+            {
+                cmap[ss][es] = route;
+                added++;
+            }
+        }
+        cout<<"\n line no : "<<itr2->first<<"\t added : "<<added;
+    }
+    
+    for(int i= 0; i<g_stations.size()+1 ; ++i )
+    {   cout<<endl;
+        for(int j= 0; j<g_stations.size()+1 ; ++j )
+            cout<<"-"<<cmap[i][j].ti;
+    }
+}
+//========================================================================================
+void conStrToLineT(string& str , LineT& aline, int& lno)
+{
+    if(str.empty())
+        return;
+    
+    //parse //1-2-30#2-3-25#3-4-30#4-5-45#5-6-30#6-7-15#7-8-60#8-9-40
+    size_t sp = 0, ep = -1;
+    int ss = 0, es = 0, tt = 0;
+    bool stop = false;
+    int start = -1; 
+    
+    while(! stop)
+    {
+        trans at; at.ln = lno; 
+        
+        sp = ep+1;
+        ep = str.find('-',sp);
+        if(sp != ep )
+            at.ss = atoi(str.substr(sp, ep-sp).c_str());
+        
+        if(start == -1)
+            start == at.ss;
+            
+        sp = ep+1;
+        ep = str.find('-',sp);
+        if(sp != ep )
+            at.es = atoi(str.substr(sp, ep-sp).c_str());
+            
+        sp = ep + 1;
+        ep = str.find('#',sp);
+        if(ep != string::npos)
+            at.ti = atoi(str.substr(sp, ep-sp).c_str());
+        else
+            at.ti = atoi(str.substr(sp).c_str()) , stop = true;
+            
+        //cout<<"\t"<<at.ss<<"\t"<<at.es<<"\t"<<at.ti<<endl;
+        
+        //typedef map<int , map<int,trans>> LineT;
+        map<int,trans>& route = aline[at.ss];
+        route[at.es] = at;
+        g_stations.insert(at.ss);
+        
+        if(stop == true)
+        {
+            if( start == at.es)
+            {
+                map<int,trans>& route = aline[at.es];
+                at.ti += 120;
+                route[at.ss] = at;
+            }
+            else
+                g_stations.insert(at.es);
+        }
+    }
+    //cout<<"\n line no : "<<lno <<"\t total ss: "<<aline.size()<<endl;
+}
+//========================================================================================
+
+int main() {
+    vector < string > output;
+    int ip1_size = 0;
+    cin >> ip1_size;
+    cin.ignore (std::numeric_limits<std::streamsize>::max(), '\n'); 
+    vector<string> ip1;
+    string ip1_item;
+    for(int ip1_i=0; ip1_i<ip1_size; ip1_i++) {
+        getline(cin, ip1_item);
+        ip1.push_back(ip1_item);
+    }
+    string ip2;
+    getline(cin, ip2);
+    output = quickestMetroRoute(ip1,ip2);
+    for(int output_i=0; output_i < output.size(); output_i++) {
+    	cout << output[output_i] << endl;;
+    }
+    return 0;
+}

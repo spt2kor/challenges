@@ -1,0 +1,65 @@
+/* Read input from STDIN. Print your output to STDOUT*/
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+
+typedef long long INT;
+INT getTotalJumps(INT& jlen, INT& slen, INT& walls, vector<INT>& wh)
+{
+    INT tjump =0, cjump=0, hwall=0, clen=0;
+    cout<<"\n jlen = "<<jlen<<endl;
+    cout<<"\n slen = "<<slen<<endl;
+    cout<<"\n walls = "<<walls<<endl;
+    
+    for(int i=0;i<walls;++i)
+    {
+        cjump = 0;
+        clen = 0;
+        hwall = wh[i];
+        
+        while ( clen < hwall )
+        {
+            clen += jlen;
+            ++cjump;
+            
+            if(clen >= hwall)
+                break;
+                
+            clen -=slen;
+        }
+        cout<<"\n cjump = "<<cjump<<endl;    
+        tjump += cjump;
+    }
+    cout<<"\n tjump = "<<tjump<<endl;
+    
+    return tjump;
+}
+
+int main(int argc, char *a[])
+{
+    //Write code here
+    INT jlen=0, slen=0, walls=0, hwall=0, tjump=0;
+    cin>>jlen;
+    cin>>slen;
+    cin>>walls;
+    vector<INT> wh;  //wallHeights;
+    
+    for(int i=0;i<walls;++i)
+    {
+        hwall = 0;
+        cin>>hwall;
+        wh.push_back(hwall);
+    }
+    
+    tjump = getTotalJumps(jlen,slen,walls,wh);
+    cout<<tjump<<endl;
+}
